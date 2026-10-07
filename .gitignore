@@ -4,4 +4,6 @@ dist/
 coverage/
 *.local
 *.tsbuildinfo
+public/catalog.json
+public/harvest-status.json
 .DS_Store

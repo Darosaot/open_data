@@ -35,10 +35,15 @@ function App() {
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [catalogMode, setCatalogMode] = useState<'demo' | 'harvested'>('demo')
 
   useEffect(() => {
     let active = true
-    catalogProvider.search(filters).then((items) => active && setResults(items))
+    catalogProvider.search(filters).then((items) => {
+      if (!active) return
+      setResults(items)
+      setCatalogMode(catalogProvider.mode)
+    })
     return () => {
       active = false
     }
@@ -153,9 +158,10 @@ function App() {
         </section>
 
         <div className="demo-banner">
-          <span>Prototype</span>
-          This build uses a small representative catalogue. Scores and preview rows are illustrative;
-          authoritative records remain with each publisher.
+          <span>{catalogMode === 'harvested' ? 'Connected' : 'Prototype'}</span>
+          {catalogMode === 'harvested'
+            ? 'Metadata harvested from connected European catalogues. Original datasets remain with their publishers.'
+            : 'Local development uses a small representative catalogue. Deployments harvest portal metadata at build time.'}
         </div>
 
         <section className="catalogue-section" id="catalogue">

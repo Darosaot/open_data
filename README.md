@@ -37,15 +37,24 @@ npm run build
 - Dataset detail panel with provenance, quality breakdown, sample data, and schema
 - Copyable cURL, Python, and JavaScript examples
 - Responsive, keyboard-friendly interface
-- Typed provider boundary ready for a live catalogue adapter
+- Build-time harvesting from 18 European catalogue/API endpoints
+- A daily GitHub Actions refresh with per-source failure isolation
+- Normalized DCAT-style metadata and heuristic quality scoring
+- Demo-data fallback when a portal is unavailable
 
 ## Data source
 
-The app currently uses `src/data/datasets.ts`, a deliberately labelled demo
-catalogue containing representative public datasets. It does not claim that these
-records are a complete or live mirror of data.europa.eu.
+The deployed build runs `npm run harvest` before Vite builds the site. The first
+source wave includes data.europa.eu, national CKAN portals (Belgium, Austria,
+Finland, Portugal, Germany, Switzerland, Ireland, Greece, the Netherlands,
+Denmark, Czechia, Slovenia and Cyprus), dane.gov.pl, data.gouv.fr, and
+OpenDataSoft catalogues including Paris. Each source is best-effort and recorded
+in `public/harvest-status.json`; a failed portal does not block the rest.
 
-To connect a live source, implement the `CatalogProvider` interface in
-`src/services/catalog.ts`. Keep normalized records in the `Dataset` shape so the
-UI does not need to know whether results came from data.europa.eu, CKAN, or another
-national portal.
+Local development uses `src/data/datasets.ts` when `public/catalog.json` is not
+present. The generated catalogue is ignored by Git because it is a deployment
+artifact, not source code.
+
+The normalized provider lives in `src/services/catalog.ts` and keeps the UI
+independent of whether records came from data.europa.eu, CKAN, or another national
+portal. Add future connectors in `scripts/harvest.mjs` without changing the UI.

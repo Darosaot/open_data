@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "harvest": "node scripts/harvest.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
