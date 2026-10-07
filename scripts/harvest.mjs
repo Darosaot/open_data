@@ -5,6 +5,7 @@ const root = resolve(new URL('..', import.meta.url).pathname)
 const outputFile = resolve(root, 'public/catalog.json')
 const statusFile = resolve(root, 'public/harvest-status.json')
 const limit = Number(process.env.HARVEST_LIMIT ?? 100)
+const maxRecords = Number(process.env.HARVEST_MAX_RECORDS ?? 0)
 const timeoutMs = Number(process.env.HARVEST_TIMEOUT_MS ?? 10000)
 
 const countryInfo = {
@@ -24,6 +25,18 @@ const countryInfo = {
   PL: ['Poland', 'PL'],
   FR: ['France', 'FR'],
   EU: ['Europe', 'EU'],
+  BG: ['Bulgaria', 'BG'],
+  HR: ['Croatia', 'HR'],
+  EE: ['Estonia', 'EE'],
+  IT: ['Italy', 'IT'],
+  LV: ['Latvia', 'LV'],
+  LT: ['Lithuania', 'LT'],
+  LU: ['Luxembourg', 'LU'],
+  MT: ['Malta', 'MT'],
+  RO: ['Romania', 'RO'],
+  SK: ['Slovakia', 'SK'],
+  IS: ['Iceland', 'IS'],
+  ES: ['Spain', 'ES'],
 }
 
 const sources = [
@@ -41,10 +54,23 @@ const sources = [
   { key: 'cz', name: 'opendata.cz', kind: 'ckan', countryCode: 'CZ', url: 'https://www.opendata.cz/api/3/action/package_search' },
   { key: 'si', name: 'podatki.gov.si', kind: 'ckan', countryCode: 'SI', url: 'https://podatki.gov.si/api/3/action/package_search' },
   { key: 'cy', name: 'data.gov.cy', kind: 'ckan', countryCode: 'CY', url: 'https://data.gov.cy/api/3/action/package_search' },
+  { key: 'bg', name: 'data.egov.bg', kind: 'ckan', countryCode: 'BG', url: 'https://data.egov.bg/api/3/action/package_search' },
+  { key: 'hr', name: 'data.gov.hr', kind: 'ckan', countryCode: 'HR', url: 'https://data.gov.hr/ckan/api/3/action/package_search' },
+  { key: 'ee', name: 'avaandmed.eesti.ee', kind: 'ckan', countryCode: 'EE', url: 'https://avaandmed.eesti.ee/api/3/action/package_search' },
+  { key: 'it', name: 'dati.gov.it', kind: 'ckan', countryCode: 'IT', url: 'https://www.dati.gov.it/opendata/api/3/action/package_search' },
+  { key: 'lv', name: 'data.gov.lv', kind: 'ckan', countryCode: 'LV', url: 'https://data.gov.lv/dati/lv/api/3/action/package_search' },
+  { key: 'lt', name: 'data.gov.lt', kind: 'ckan', countryCode: 'LT', url: 'https://data.gov.lt/api/3/action/package_search' },
+  { key: 'lu', name: 'data.public.lu', kind: 'ckan', countryCode: 'LU', url: 'https://data.public.lu/api/3/action/package_search' },
+  { key: 'mt', name: 'data.gov.mt', kind: 'ckan', countryCode: 'MT', url: 'https://data.gov.mt/api/3/action/package_search' },
+  { key: 'ro', name: 'data.gov.ro', kind: 'ckan', countryCode: 'RO', url: 'https://data.gov.ro/api/3/action/package_search' },
+  { key: 'sk', name: 'data.gov.sk', kind: 'ckan', countryCode: 'SK', url: 'https://data.gov.sk/api/3/action/package_search' },
+  { key: 'is', name: 'gogn.island.is', kind: 'ckan', countryCode: 'IS', url: 'https://gogn.island.is/api/3/action/package_search' },
   { key: 'pl', name: 'dane.gov.pl', kind: 'dane', countryCode: 'PL', url: 'https://api.dane.gov.pl/1.4/datasets' },
   { key: 'fr', name: 'data.gouv.fr', kind: 'gouv', countryCode: 'FR', url: 'https://www.data.gouv.fr/api/1/datasets/' },
   { key: 'ods', name: 'OpenDataSoft public catalogues', kind: 'ods', countryCode: 'EU', url: 'https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets' },
   { key: 'paris', name: 'Paris Open Data', kind: 'ods', countryCode: 'FR', url: 'https://opendata.paris.fr/api/explore/v2.1/catalog/datasets' },
+  { key: 'brussels', name: 'Brussels Open Data', kind: 'ods', countryCode: 'BE', url: 'https://opendata.brussels.be/api/explore/v2.1/catalog/datasets' },
+  { key: 'barcelona', name: 'Barcelona Open Data', kind: 'ods', countryCode: 'ES', url: 'https://opendata-ajuntament.barcelona.cat/api/explore/v2.1/catalog/datasets' },
 ]
 
 const stripMarkup = (value) =>
@@ -214,40 +240,62 @@ function recordsFor(payload, source) {
   return asArray(first(payload.result?.results, payload.result?.datasets, payload.result, payload.results, payload.data))
 }
 
-function requestUrl(source) {
+function requestUrl(source, offset) {
   const url = new URL(source.url)
   if (source.kind === 'ckan') {
     url.searchParams.set('rows', String(limit))
-    url.searchParams.set('start', '0')
+    url.searchParams.set('start', String(offset))
     url.searchParams.set('q', '*:*')
   } else if (source.kind === 'europa') {
     url.searchParams.set('limit', String(limit))
-    url.searchParams.set('offset', '0')
+    url.searchParams.set('offset', String(offset))
   } else if (source.kind === 'ods') {
     url.searchParams.set('limit', String(limit))
+    url.searchParams.set('offset', String(offset))
   } else if (source.kind === 'dane') {
     url.searchParams.set('limit', String(limit))
+    url.searchParams.set('offset', String(offset))
   } else if (source.kind === 'gouv') {
     url.searchParams.set('page_size', String(limit))
+    url.searchParams.set('page', String(Math.floor(offset / limit) + 1))
   }
   return url
 }
 
 async function fetchSource(source) {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), timeoutMs)
-  try {
-    const response = await fetch(requestUrl(source), {
-      signal: controller.signal,
-      headers: { accept: 'application/json', 'user-agent': 'OpenEU-Lens/0.1 (+https://github.com/Darosaot/open_data)' },
-    })
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const payload = await response.json()
-    const records = recordsFor(payload, source)
-    return records.slice(0, limit).map((record, index) => normalizeRecord(record, source, index))
-  } finally {
-    clearTimeout(timeout)
+  const normalized = []
+  let offset = 0
+  let previousSignature = ''
+
+  while (true) {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      const response = await fetch(requestUrl(source, offset), {
+        signal: controller.signal,
+        headers: { accept: 'application/json', 'user-agent': 'OpenEU-Lens/0.1 (+https://github.com/Darosaot/open_data)' },
+      })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      const payload = await response.json()
+      const records = recordsFor(payload, source)
+      if (records.length === 0) break
+
+      const signature = records.slice(0, 2).map((record) => first(record.id, record.name, record.identifier, record.dataset_id, record.title)).join('|')
+      if (signature && signature === previousSignature) break
+      previousSignature = signature
+
+      const remaining = maxRecords > 0 ? maxRecords - normalized.length : records.length
+      normalized.push(...records.slice(0, Math.max(0, remaining)).map((record, index) => normalizeRecord(record, source, offset + index)))
+      const total = Number(first(payload.result?.count, payload.count, payload.total, payload.totalCount))
+      if (records.length < limit || (Number.isFinite(total) && total > 0 && offset + records.length >= total)) break
+      if (maxRecords > 0 && normalized.length >= maxRecords) break
+      offset += records.length
+    } finally {
+      clearTimeout(timeout)
+    }
   }
+
+  return normalized
 }
 
 await mkdir(dirname(outputFile), { recursive: true })

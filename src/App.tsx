@@ -155,7 +155,7 @@ function App() {
             <div><strong>{catalogSnapshot.datasetCount}</strong><span>{catalogMode === 'harvested' ? 'harvested datasets' : 'demo examples'}</span></div>
             <div><strong>{catalogMode === 'harvested' ? catalogSnapshot.connectedSources : '—'}</strong><span>{catalogMode === 'harvested' ? 'connected portals' : 'live sources yet'}</span></div>
             <div><strong>4</strong><span>quality dimensions</span></div>
-            <div><strong>{catalogMode === 'harvested' ? catalogSnapshot.attemptedSources : '18'}</strong><span>{catalogMode === 'harvested' ? 'sources attempted' : 'configured connectors'}</span></div>
+            <div><strong>{catalogMode === 'harvested' ? catalogSnapshot.attemptedSources : '31'}</strong><span>{catalogMode === 'harvested' ? 'sources attempted' : 'configured adapters'}</span></div>
           </div>
         </section>
 

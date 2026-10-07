@@ -37,19 +37,18 @@ npm run build
 - Dataset detail panel with provenance, quality breakdown, sample data, and schema
 - Copyable cURL, Python, and JavaScript examples
 - Responsive, keyboard-friendly interface
-- Build-time harvesting from 18 European catalogue/API endpoints
+- Build-time harvesting from 31 European catalogue/API endpoints
 - A daily GitHub Actions refresh with per-source failure isolation
 - Normalized DCAT-style metadata and heuristic quality scoring
 - Demo-data fallback when a portal is unavailable
 
 ## Data source
 
-The deployed build runs `npm run harvest` before Vite builds the site. The first
-source wave includes data.europa.eu, national CKAN portals (Belgium, Austria,
-Finland, Portugal, Germany, Switzerland, Ireland, Greece, the Netherlands,
-Denmark, Czechia, Slovenia and Cyprus), dane.gov.pl, data.gouv.fr, and
-OpenDataSoft catalogues including Paris. Each source is best-effort and recorded
-in `public/harvest-status.json`; a failed portal does not block the rest.
+The deployed build runs `npm run harvest` before Vite builds the site. It requests
+all available metadata pages from data.europa.eu, national CKAN portals across
+the EU/EEA, dane.gov.pl, data.gouv.fr, and OpenDataSoft catalogues including
+Paris, Brussels, and Barcelona. Each source is best-effort and recorded in
+`public/harvest-status.json`; a failed portal does not block the rest.
 If every portal is unavailable in CI, the deployment fails rather than silently
 publishing the demo catalogue as if it were live.
 
