@@ -50,6 +50,8 @@ Finland, Portugal, Germany, Switzerland, Ireland, Greece, the Netherlands,
 Denmark, Czechia, Slovenia and Cyprus), dane.gov.pl, data.gouv.fr, and
 OpenDataSoft catalogues including Paris. Each source is best-effort and recorded
 in `public/harvest-status.json`; a failed portal does not block the rest.
+If every portal is unavailable in CI, the deployment fails rather than silently
+publishing the demo catalogue as if it were live.
 
 Local development uses `src/data/datasets.ts` when `public/catalog.json` is not
 present. The generated catalogue is ignored by Git because it is a deployment

@@ -270,3 +270,7 @@ const deduped = [...new Map(allDatasets.map((dataset) => [dataset.id, dataset]))
 await writeFile(outputFile, `${JSON.stringify(deduped, null, 2)}\n`)
 await writeFile(statusFile, `${JSON.stringify({ generatedAt: new Date().toISOString(), sources: status, records: deduped.length }, null, 2)}\n`)
 console.log(`Harvest complete: ${deduped.length} normalized records from ${sources.length} sources`)
+
+if (deduped.length === 0 && process.env.CI === 'true') {
+  throw new Error('No portal returned catalogue metadata; refusing to deploy demo data as a live catalogue.')
+}
