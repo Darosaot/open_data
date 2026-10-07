@@ -36,6 +36,7 @@ function App() {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [catalogMode, setCatalogMode] = useState<'demo' | 'harvested'>('demo')
+  const [catalogSnapshot, setCatalogSnapshot] = useState(catalogProvider.snapshot)
 
   useEffect(() => {
     let active = true
@@ -43,6 +44,7 @@ function App() {
       if (!active) return
       setResults(items)
       setCatalogMode(catalogProvider.mode)
+      setCatalogSnapshot(catalogProvider.snapshot)
     })
     return () => {
       active = false
@@ -150,10 +152,10 @@ function App() {
           </div>
 
           <div className="hero__stats" aria-label="Prototype highlights">
-            <div><strong>{datasets.length}</strong><span>curated examples</span></div>
-            <div><strong>{countries.length}</strong><span>country views</span></div>
+            <div><strong>{catalogSnapshot.datasetCount}</strong><span>{catalogMode === 'harvested' ? 'harvested datasets' : 'demo examples'}</span></div>
+            <div><strong>{catalogMode === 'harvested' ? catalogSnapshot.connectedSources : '—'}</strong><span>{catalogMode === 'harvested' ? 'connected portals' : 'live sources yet'}</span></div>
             <div><strong>4</strong><span>quality dimensions</span></div>
-            <div><strong>1</strong><span>consistent interface</span></div>
+            <div><strong>{catalogMode === 'harvested' ? catalogSnapshot.attemptedSources : '18'}</strong><span>{catalogMode === 'harvested' ? 'sources attempted' : 'configured connectors'}</span></div>
           </div>
         </section>
 
